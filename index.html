@@ -1,0 +1,385 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechTrust: Interactive Project Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Professional Tech Trust (Deep Navy, Electric Blue, Verification Green) -->
+    <!-- Application Structure Plan: A single-page dashboard with fixed sidebar navigation and a dynamic content area. Sections include 'Overview', 'Team Contracts', 'Database Schema', 'Data Flow', and an interactive 'Roadmap'. This structure was chosen because it mirrors professional project management tools, making it immediately intuitive for a development team. The interactive roadmap, filterable by team member, is the key feature, transforming a static document into a personalized daily guide, crucial for a fast-paced 3-person sprint. -->
+    <!-- Visualization & Content Choices: Report Info: Team Roles -> Goal: Inform -> Viz/Presentation: Donut Chart -> Interaction: Hover for role details -> Justification: Provides a quick visual summary of the three equal and distinct roles. Library: Chart.js. Report Info: ERD & DFD -> Goal: Organize -> Viz/Presentation: Styled HTML cards and tables -> Interaction: Static -> Justification: Clearly delineates entities, relationships, and processes without complex diagrams, adhering to the NO SVG constraint. Method: Tailwind CSS. Report Info: 20-Day Roadmap -> Goal: Organize/Track -> Viz/Presentation: Interactive HTML Table -> Interaction: Filter by Member -> Justification: Allows each team member to focus on their specific daily tasks, which is essential for parallel development. Method: Vanilla JS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light Grey */
+        }
+        .sidebar-link.active {
+            background-color: #4FC3F7; /* Electric Blue */
+            color: #1A237E; /* Deep Navy Blue */
+            font-weight: 600;
+        }
+        .main-content {
+            transition: opacity 0.3s ease-in-out;
+        }
+        .btn-filter.active {
+            background-color: #1A237E; /* Deep Navy Blue */
+            color: white;
+            border-color: #1A237E;
+        }
+        .table-header {
+             background-color: #1A237E; /* Deep Navy Blue */
+             color: white;
+        }
+        .card-m1 { border-left: 4px solid #4FC3F7; }
+        .card-m2 { border-left: 4px solid #1A237E; }
+        .card-m3 { border-left: 4px solid #69F0AE; }
+    </style>
+</head>
+<body class="flex min-h-screen">
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 bg-[#1A237E] text-white flex-col fixed h-full shadow-lg hidden md:flex">
+        <div class="p-6 text-center border-b border-blue-800">
+            <h1 class="text-2xl font-bold">TechTrust</h1>
+            <p class="text-sm text-blue-300">Project Dashboard</p>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <a href="#" data-section="overview" class="sidebar-link flex items-center space-x-3 py-2.5 px-4 rounded-lg transition-colors duration-200 hover:bg-blue-700"><span>📊</span><span>Overview</span></a>
+            <a href="#" data-section="contracts" class="sidebar-link flex items-center space-x-3 py-2.5 px-4 rounded-lg transition-colors duration-200 hover:bg-blue-700"><span>📜</span><span>Team Contracts</span></a>
+            <a href="#" data-section="schema" class="sidebar-link flex items-center space-x-3 py-2.5 px-4 rounded-lg transition-colors duration-200 hover:bg-blue-700"><span>🗃️</span><span>Database Schema</span></a>
+            <a href="#" data-section="dataflow" class="sidebar-link flex items-center space-x-3 py-2.5 px-4 rounded-lg transition-colors duration-200 hover:bg-blue-700"><span>↔️</span><span>Data Flow</span></a>
+            <a href="#" data-section="roadmap" class="sidebar-link flex items-center space-x-3 py-2.5 px-4 rounded-lg transition-colors duration-200 hover:bg-blue-700"><span>🗺️</span><span>Daily Roadmap</span></a>
+        </nav>
+        <div class="p-4 text-center text-xs text-blue-300 border-t border-blue-800">
+            <p>Version 1.0.0 MVP Sprint</p>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 md:ml-64 p-4 md:p-10">
+        <div class="md:hidden mb-4">
+             <select id="mobile-nav" class="w-full p-2 border rounded-lg bg-white shadow">
+                <option value="overview">Overview</option>
+                <option value="contracts">Team Contracts</option>
+                <option value="schema">Database Schema</option>
+                <option value="dataflow">Data Flow</option>
+                <option value="roadmap">Daily Roadmap</option>
+            </select>
+        </div>
+        <div id="main-content-container">
+            <!-- Content will be dynamically injected here -->
+        </div>
+    </main>
+
+<script>
+    const AppData = {
+        overview: {
+            title: "Project Overview",
+            intro: "This dashboard provides an interactive guide to the TechTrust MVP project plan. The goal is to develop an AI-powered platform for verifying tech professionals' credentials within a 20-day sprint.",
+            stats: [
+                { label: "Project Duration", value: "20 Working Days", icon: "⏳" },
+                { label: "Team Size", value: "3 Members", icon: "👥" },
+                { label: "Core Innovation", value: "AI Trust Score", icon: "💡" },
+            ],
+            chartData: {
+                labels: ['M1: Frontend & UX Specialist', 'M2: Backend & Database Architect', 'M3: AI & Verification Engineer'],
+                data: [33.3, 33.3, 33.4]
+            }
+        },
+        contracts: {
+            title: "Team Roles & Mandatory Contracts",
+            intro: "Success hinges on every member adhering to the defined contracts. These agreements ensure that all pieces (Frontend, Backend, AI) fit together perfectly during integration.",
+            roles: [
+                { member: 'M1', role: 'Frontend/UX Specialist', responsibility: 'User Experience, Responsive Design, State Management, Data Presentation.', cardClass: 'card-m1' },
+                { member: 'M2', role: 'Backend/Database Architect', responsibility: 'Authentication, Data Security, Database Structure (Firestore), API Endpoints, Matching Logic.', cardClass: 'card-m2' },
+                { member: 'M3', role: 'AI/Verification Engineer', responsibility: 'Verification Logic, Trust Score Generation, Prompt Engineering, Structured JSON Output.', cardClass: 'card-m3' }
+            ],
+            contracts: [
+                { name: 'API Endpoints Contract', owner: 'M2', desc: 'Defines exact URLs, HTTP methods, and required JSON payloads. M1 cannot proceed without this.' },
+                { name: 'AI Output Schema Contract', owner: 'M3', desc: 'The fixed JSON structure the AI verification function *must* return to M2. Example: {"trust_score": 9.2, "ai_summary": "..."}.' },
+                { name: 'Database Fields Contract', owner: 'M2', desc: 'Defines the exact naming convention (camelCase) for all fields in the Firestore collections.' }
+            ]
+        },
+        schema: {
+            title: "Database Schema (ERD Sketch)",
+            intro: "This Entity-Relationship Diagram defines the main data entities in Firestore. This model supports verification, matching, and recruiter management.",
+            entities: [
+                { name: 'USER', pk: 'userID', attributes: 'userType, email, passwordHash, accountStatus', note: '/artifacts/{appId}/users/{userID}/' },
+                { name: 'PROFILE', pk: 'profileID', attributes: 'userID (FK), skillsArray, experience, claimText, currentTrustScore', note: '/artifacts/{appId}/public/data/profiles' },
+                { name: 'VETTING_RESULT', pk: 'resultID', attributes: 'profileID (FK), scoreBreakdown, flags, aiFeedback, timestamp', note: '/artifacts/{appId}/public/data/vetting_results' },
+                { name: 'JOB_POST', pk: 'jobID', attributes: 'recruiterID (FK), title, description, requiredSkills, status', note: '/artifacts/{appId}/public/data/job_posts' },
+                { name: 'MATCH', pk: 'matchID', attributes: 'jobID (FK), profileID (FK), matchScore, status', note: '/artifacts/{appId}/public/data/matches' }
+            ]
+        },
+        dataflow: {
+            title: "Data Flow (DFD Level 1)",
+            intro: "This diagram breaks the TechTrust system into its four main functional areas, showing how data moves between them.",
+            processes: [
+                { id: '1.0', name: 'User & Profile Management', desc: 'Handles account creation, data input (CRUD), and submission for vetting.', stores: 'USER, PROFILE' },
+                { id: '2.0', name: 'AI Vetting & Trust Scoring', desc: 'Core process. Receives a Profile, runs AI analysis, calculates Trust Score, and generates feedback.', stores: 'PROFILE, VETTING_RESULT' },
+                { id: '3.0', name: 'Job Matching & Search', desc: 'Allows recruiters to post jobs and search for vetted candidates. Calculates a matchScore.', stores: 'PROFILE, JOB_POST, MATCH' },
+                { id: '4.0', name: 'Reporting & Telemetry', desc: 'Generates Recruiter Dashboard reports and logs system performance for auditing.', stores: 'VETTING_RESULT, MATCH' }
+            ]
+        },
+        roadmap: {
+            title: "20-Day Execution Roadmap",
+            intro: "This is the day-by-day execution plan for the 4-week sprint. Use the filters to view tasks for the entire team or a specific member. Each task is designed to build upon the previous day's work, leading to a fully integrated product by Day 20.",
+            tasks: [
+                { day: 1, m1: 'Setup Project, Build Header/Footer', m2: 'Finalize API & DB Contracts', m3: 'Draft Gemini System Instruction' },
+                { day: 2, m1: 'Build Login/Register UI', m2: 'Setup Firebase Auth & Firestore', m3: 'Test Gemini API connectivity' },
+                { day: 3, m1: 'Build static Profile Page shell', m2: 'Implement Sign-Up/Sign-In functions', m3: 'Define AI input handler function' },
+                { day: 4, m1: 'Build static Recruiter Dashboard shell', m2: 'Implement Logout & session persistence', m3: 'Create 5 sets of AI test data' },
+                { day: 5, m1: 'Connect UI to Auth functions (Login/Logout)', m2: 'Review M1 Auth connection', m3: 'Document `verifyClaim()` input/output' },
+                { day: 6, m1: 'Fetch and display user profile data', m2: 'Implement API to read profile data', m3: 'Write core `verifyClaim()` function body' },
+                { day: 7, m1: 'Build UI for adding/deleting Claims', m2: 'Implement Claims CRUD API', m3: 'Parse AI response into JSON schema' },
+                { day: 8, m1: 'Build UI for creating a Job Posting', m2: 'Implement Job Posting write API', m3: 'Handover testable `verifyClaim` function to M2' },
+                { day: 9, m1: 'Build "Submit for Verification" modal UI', m2: 'Implement API to list all candidates', m3: 'Validate `verifyClaim` with edge cases' },
+                { day: 10, m1: 'Test full Claims flow (add/delete)', m2: 'Review M3 `verifyClaim` function', m3: 'Document AI error handling for M2' },
+                { day: 11, m1: 'Implement "Run Verification" button handler', m2: 'Integrate M3 `verifyClaim` function call', m3: 'Support M2 with integration' },
+                { day: 12, m1: 'Display AI result (score/summary) in UI', m2: 'Save AI JSON result to Firestore', m3: 'Ensure AI output format is correct for DB' },
+                { day: 13, m1: 'Build UI for Matching Score on dashboard', m2: 'Write core candidate matching algorithm', m3: 'Refine AI prompt for ambiguous claims' },
+                { day: 14, m1: 'Build Recruiter\'s detailed candidate view', m2: 'Implement final matching API endpoint', m3: 'Review M2 data handling for security' },
+                { day: 15, m1: 'Full End-to-End Test of entire user flow', m2: 'Implement API rate limiting & error logging', m3: 'Document Trust Score calculation' },
+                { day: 16, m1: 'Final UI/UX Polish & styling consistency', m2: 'Unit test Auth & Job Posting endpoints', m3: 'Draft Report: AI Methodology' },
+                { day: 17, m1: 'Responsiveness audit on all devices', m2: 'Test Matching Algorithm for logical ranking', m3: 'Draft Report: AI Implementation' },
+                { day: 18, m1: 'Accessibility check (keyboard nav, labels)', m2: 'Prepare final deployment configurations', m3: 'Draft Report: AI Evaluation' },
+                { day: 19, m1: 'Create final demo data and presentation script', m2: 'Final code review of all modules', m3: 'Create presentation slides for AI logic' },
+                { day: 20, m1: 'Deploy final product & clean frontend code', m2: 'Ensure backend is robust and secure', m3: 'Submit final report and all AI documentation' },
+            ]
+        }
+    };
+
+    const mainContainer = document.getElementById('main-content-container');
+    let overviewChart = null;
+
+    function wrapLabel(label, maxChars = 16) {
+        if (typeof label !== 'string' || label.length <= maxChars) return label;
+        const words = label.split(' ');
+        let lines = [];
+        let currentLine = '';
+        words.forEach(word => {
+            if ((currentLine + ' ' + word).trim().length > maxChars && currentLine.length > 0) {
+                lines.push(currentLine.trim());
+                currentLine = word;
+            } else {
+                currentLine += (currentLine.length > 0 ? ' ' : '') + word;
+            }
+        });
+        if (currentLine) lines.push(currentLine.trim());
+        return lines;
+    }
+    
+    const tooltipTitleCallback = (tooltipItems) => {
+        const item = tooltipItems[0];
+        let label = item.chart.data.labels[item.dataIndex];
+        return Array.isArray(label) ? label.join(' ') : label;
+    };
+
+    function renderSection(sectionId) {
+        mainContainer.style.opacity = 0;
+        setTimeout(() => {
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.classList.toggle('active', link.dataset.section === sectionId);
+            });
+            document.getElementById('mobile-nav').value = sectionId;
+            
+            switch (sectionId) {
+                case 'overview': renderOverview(); break;
+                case 'contracts': renderContracts(); break;
+                case 'schema': renderSchema(); break;
+                case 'dataflow': renderDataFlow(); break;
+                case 'roadmap': renderRoadmap(); break;
+                default: renderOverview();
+            }
+            mainContainer.style.opacity = 1;
+        }, 200);
+    }
+
+    function renderOverview() {
+        const data = AppData.overview;
+        const statsHtml = data.stats.map(s => `
+            <div class="bg-white p-6 rounded-lg shadow flex items-center space-x-4">
+                <div class="text-3xl">${s.icon}</div>
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">${s.label}</p>
+                    <p class="text-xl font-bold text-[#1A237E]">${s.value}</p>
+                </div>
+            </div>
+        `).join('');
+
+        mainContainer.innerHTML = `
+            <div class="main-content">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">${data.title}</h2>
+                <p class="text-gray-600 mb-8 max-w-3xl">${data.intro}</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">${statsHtml}</div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Team Role Distribution</h3>
+                    <div class="chart-container mx-auto" style="position: relative; height: 300px; max-height: 300px; width: 100%; max-width: 300px;">
+                        <canvas id="overviewChart"></canvas>
+                    </div>
+                </div>
+            </div>`;
+        
+        const ctx = document.getElementById('overviewChart').getContext('2d');
+        if (overviewChart) overviewChart.destroy();
+        const wrappedLabels = data.chartData.labels.map(l => wrapLabel(l));
+        overviewChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: wrappedLabels,
+                datasets: [{
+                    data: data.chartData.data,
+                    backgroundColor: ['#4FC3F7', '#1A237E', '#69F0AE'],
+                    borderColor: '#f3f4f6',
+                    borderWidth: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: { callbacks: { title: tooltipTitleCallback } }
+                }
+            }
+        });
+    }
+
+    function renderContracts() {
+        const data = AppData.contracts;
+        const rolesHtml = data.roles.map(r => `
+            <div class="bg-white p-6 rounded-lg shadow ${r.cardClass}">
+                <h3 class="font-bold text-xl text-[#1A237E]">${r.member}: ${r.role}</h3>
+                <p class="text-gray-700 mt-2">${r.responsibility}</p>
+            </div>
+        `).join('');
+        const contractsHtml = data.contracts.map(c => `
+             <div class="bg-gray-50 p-4 rounded-lg border">
+                <p class="font-semibold text-[#1A237E]">${c.name} (Owner: ${c.owner})</p>
+                <p class="text-sm text-gray-600 mt-1">${c.desc}</p>
+            </div>
+        `).join('');
+        mainContainer.innerHTML = `
+            <div class="main-content">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">${data.title}</h2>
+                <p class="text-gray-600 mb-8 max-w-3xl">${data.intro}</p>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">${rolesHtml}</div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Mandatory Contracts</h3>
+                <div class="space-y-4">${contractsHtml}</div>
+            </div>`;
+    }
+
+     function renderSchema() {
+        const data = AppData.schema;
+        const entitiesHtml = data.entities.map(e => `
+            <div class="bg-white p-4 rounded-lg shadow border-l-4 border-[#1A237E]">
+                 <h4 class="font-bold text-lg text-[#1A237E]">${e.name}</h4>
+                 <p class="text-sm text-gray-600"><span class="font-semibold">Primary Key:</span> ${e.pk}</p>
+                 <p class="text-sm text-gray-600 mt-2"><span class="font-semibold">Attributes:</span> ${e.attributes}</p>
+                 <p class="text-xs text-gray-500 mt-2 font-mono bg-gray-100 p-1 rounded">${e.note}</p>
+            </div>
+        `).join('');
+
+        mainContainer.innerHTML = `
+            <div class="main-content">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">${data.title}</h2>
+                <p class="text-gray-600 mb-8 max-w-3xl">${data.intro}</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    ${entitiesHtml}
+                </div>
+            </div>`;
+    }
+    
+    function renderDataFlow() {
+        const data = AppData.dataflow;
+        const processesHtml = data.processes.map(p => `
+            <div class="bg-white p-6 rounded-lg shadow border-l-4 border-[#4FC3F7]">
+                <h4 class="font-bold text-lg text-[#1A237E]">${p.id}: ${p.name}</h4>
+                <p class="text-gray-700 mt-2">${p.desc}</p>
+                <p class="text-sm text-gray-500 mt-3"><span class="font-semibold">Data Stores Used:</span> ${p.stores}</p>
+            </div>
+        `).join('');
+        mainContainer.innerHTML = `
+            <div class="main-content">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">${data.title}</h2>
+                <p class="text-gray-600 mb-8 max-w-3xl">${data.intro}</p>
+                 <div class="space-y-6">${processesHtml}</div>
+            </div>`;
+    }
+
+    function renderRoadmap(filter = 'all') {
+        const data = AppData.roadmap;
+        const tasksHtml = data.tasks.map(t => {
+            const m1Html = `<td class="p-3 ${filter !== 'all' && filter !== 'm1' ? 'md:hidden' : ''}"><div class="p-2 rounded bg-blue-50 border border-blue-200">${t.m1}</div></td>`;
+            const m2Html = `<td class="p-3 ${filter !== 'all' && filter !== 'm2' ? 'md:hidden' : ''}"><div class="p-2 rounded bg-indigo-50 border border-indigo-200">${t.m2}</div></td>`;
+            const m3Html = `<td class="p-3 ${filter !== 'all' && filter !== 'm3' ? 'md:hidden' : ''}"><div class="p-2 rounded bg-green-50 border border-green-200">${t.m3}</div></td>`;
+            
+            let singleViewHtml = '';
+            if (filter === 'm1') singleViewHtml = `<td class="p-3 md:hidden"><div class="font-semibold text-[#4FC3F7]">M1 Task:</div><div class="p-2 rounded bg-blue-50 border border-blue-200">${t.m1}</div></td>`;
+            if (filter === 'm2') singleViewHtml = `<td class="p-3 md:hidden"><div class="font-semibold text-[#1A237E]">M2 Task:</div><div class="p-2 rounded bg-indigo-50 border border-indigo-200">${t.m2}</div></td>`;
+            if (filter === 'm3') singleViewHtml = `<td class="p-3 md:hidden"><div class="font-semibold text-[#69F0AE]">M3 Task:</div><div class="p-2 rounded bg-green-50 border border-green-200">${t.m3}</div></td>`;
+
+            return `<tr class="border-t">
+                        <td class="p-3 font-bold text-center text-[#1A237E]">${t.day}</td>
+                        ${m1Html}${m2Html}${m3Html}
+                        ${singleViewHtml}
+                    </tr>`;
+        }).join('');
+
+        mainContainer.innerHTML = `
+            <div class="main-content">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">${data.title}</h2>
+                <p class="text-gray-600 mb-6 max-w-3xl">${data.intro}</p>
+                <div class="flex items-center space-x-2 mb-4">
+                    <span class="text-sm font-medium">Filter View:</span>
+                    <button data-filter="all" class="btn-filter ${filter === 'all' ? 'active' : ''} px-4 py-1.5 border rounded-full text-sm font-medium transition-colors">All</button>
+                    <button data-filter="m1" class="btn-filter ${filter === 'm1' ? 'active' : ''} px-4 py-1.5 border rounded-full text-sm font-medium transition-colors">M1</button>
+                    <button data-filter="m2" class="btn-filter ${filter === 'm2' ? 'active' : ''} px-4 py-1.5 border rounded-full text-sm font-medium transition-colors">M2</button>
+                    <button data-filter="m3" class="btn-filter ${filter === 'm3' ? 'active' : ''} px-4 py-1.5 border rounded-full text-sm font-medium transition-colors">M3</button>
+                </div>
+                <div class="overflow-x-auto bg-white rounded-lg shadow">
+                    <table class="w-full text-sm">
+                        <thead class="table-header">
+                            <tr>
+                                <th class="p-3 w-16 text-center">Day</th>
+                                <th class="p-3 text-left ${filter !== 'all' && filter !== 'm1' ? 'md:hidden' : ''}">M1: Frontend & UX</th>
+                                <th class="p-3 text-left ${filter !== 'all' && filter !== 'm2' ? 'md:hidden' : ''}">M2: Backend & DB</th>
+                                <th class="p-3 text-left ${filter !== 'all' && filter !== 'm3' ? 'md:hidden' : ''}">M3: AI & Verification</th>
+                                <th class="p-3 text-left md:hidden ${filter === 'all' ? 'hidden' : ''}">Task Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>${tasksHtml}</tbody>
+                    </table>
+                </div>
+            </div>`;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelector('aside').addEventListener('click', e => {
+            const link = e.target.closest('.sidebar-link');
+            if (link) {
+                e.preventDefault();
+                renderSection(link.dataset.section);
+            }
+        });
+        
+        document.getElementById('mobile-nav').addEventListener('change', e => {
+            renderSection(e.target.value);
+        });
+
+        mainContainer.addEventListener('click', e => {
+            if (e.target.matches('.btn-filter')) {
+                renderRoadmap(e.target.dataset.filter);
+            }
+        });
+
+        renderSection('overview');
+    });
+
+</script>
+</body>
+</html>
+
