@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -7,10 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: Professional Tech Trust (Deep Navy, Electric Blue, Verification Green) -->
-    <!-- Application Structure Plan: A single-page dashboard with fixed sidebar navigation and a dynamic content area. Sections include 'Overview', 'Team Contracts', 'Database Schema', 'Data Flow', and an interactive 'Roadmap'. This structure was chosen because it mirrors professional project management tools, making it immediately intuitive for a development team. The interactive roadmap, filterable by team member, is the key feature, transforming a static document into a personalized daily guide, crucial for a fast-paced 3-person sprint. -->
-    <!-- Visualization & Content Choices: Report Info: Team Roles -> Goal: Inform -> Viz/Presentation: Donut Chart -> Interaction: Hover for role details -> Justification: Provides a quick visual summary of the three equal and distinct roles. Library: Chart.js. Report Info: ERD & DFD -> Goal: Organize -> Viz/Presentation: Styled HTML cards and tables -> Interaction: Static -> Justification: Clearly delineates entities, relationships, and processes without complex diagrams, adhering to the NO SVG constraint. Method: Tailwind CSS. Report Info: 20-Day Roadmap -> Goal: Organize/Track -> Viz/Presentation: Interactive HTML Table -> Interaction: Filter by Member -> Justification: Allows each team member to focus on their specific daily tasks, which is essential for parallel development. Method: Vanilla JS. -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -39,7 +35,6 @@
     </style>
 </head>
 <body class="flex min-h-screen">
-    <!-- Sidebar Navigation -->
     <aside class="w-64 bg-[#1A237E] text-white flex-col fixed h-full shadow-lg hidden md:flex">
         <div class="p-6 text-center border-b border-blue-800">
             <h1 class="text-2xl font-bold">TechTrust</h1>
@@ -57,7 +52,6 @@
         </div>
     </aside>
 
-    <!-- Main Content Area -->
     <main class="flex-1 md:ml-64 p-4 md:p-10">
         <div class="md:hidden mb-4">
              <select id="mobile-nav" class="w-full p-2 border rounded-lg bg-white shadow">
@@ -69,8 +63,7 @@
             </select>
         </div>
         <div id="main-content-container">
-            <!-- Content will be dynamically injected here -->
-        </div>
+            </div>
     </main>
 
 <script>
@@ -93,31 +86,31 @@
             intro: "Success hinges on every member adhering to the defined contracts. These agreements ensure that all pieces (Frontend, Backend, AI) fit together perfectly during integration.",
             roles: [
                 { member: 'M1', role: 'Frontend/UX Specialist', responsibility: 'User Experience, Responsive Design, State Management, Data Presentation.', cardClass: 'card-m1' },
-                { member: 'M2', role: 'Backend/Database Architect', responsibility: 'Authentication, Data Security, Database Structure (Firestore), API Endpoints, Matching Logic.', cardClass: 'card-m2' },
+                { member: 'M2', role: 'Backend/Database Architect', responsibility: 'Authentication, Data Security, Database Structure (MongoDB), API Endpoints, Matching Logic.', cardClass: 'card-m2' },
                 { member: 'M3', role: 'AI/Verification Engineer', responsibility: 'Verification Logic, Trust Score Generation, Prompt Engineering, Structured JSON Output.', cardClass: 'card-m3' }
             ],
             contracts: [
                 { name: 'API Endpoints Contract', owner: 'M2', desc: 'Defines exact URLs, HTTP methods, and required JSON payloads. M1 cannot proceed without this.' },
                 { name: 'AI Output Schema Contract', owner: 'M3', desc: 'The fixed JSON structure the AI verification function *must* return to M2. Example: {"trust_score": 9.2, "ai_summary": "..."}.' },
-                { name: 'Database Fields Contract', owner: 'M2', desc: 'Defines the exact naming convention (camelCase) for all fields in the Firestore collections.' }
+                { name: 'Database Collections Contract', owner: 'M2', desc: 'Defines the exact naming convention (camelCase) for all fields and collections in MongoDB.' }
             ]
         },
         schema: {
-            title: "Database Schema (ERD Sketch)",
-            intro: "This Entity-Relationship Diagram defines the main data entities in Firestore. This model supports verification, matching, and recruiter management.",
+            title: "Database Schema (MongoDB Collections)",
+            intro: "This defines the main data collections in MongoDB. This model supports verification, matching, and recruiter management.",
             entities: [
-                { name: 'USER', pk: 'userID', attributes: 'userType, email, passwordHash, accountStatus', note: '/artifacts/{appId}/users/{userID}/' },
-                { name: 'PROFILE', pk: 'profileID', attributes: 'userID (FK), skillsArray, experience, claimText, currentTrustScore', note: '/artifacts/{appId}/public/data/profiles' },
-                { name: 'VETTING_RESULT', pk: 'resultID', attributes: 'profileID (FK), scoreBreakdown, flags, aiFeedback, timestamp', note: '/artifacts/{appId}/public/data/vetting_results' },
-                { name: 'JOB_POST', pk: 'jobID', attributes: 'recruiterID (FK), title, description, requiredSkills, status', note: '/artifacts/{appId}/public/data/job_posts' },
-                { name: 'MATCH', pk: 'matchID', attributes: 'jobID (FK), profileID (FK), matchScore, status', note: '/artifacts/{appId}/public/data/matches' }
+                { name: 'USER', pk: 'userID', attributes: 'userType, email, passwordHash, accountStatus', note: 'Authentication and top-level user data.' },
+                { name: 'PROFILE', pk: 'profileID', attributes: 'userID (FK), skillsArray, experience, claimText, currentTrustScore', note: 'Contains the verifiable details provided by the professional.' },
+                { name: 'VETTING_RESULT', pk: 'resultID', attributes: 'profileID (FK), scoreBreakdown, flags, aiFeedback, timestamp', note: 'Stores the output from the AI verification engine.' },
+                { name: 'JOB_POST', pk: 'jobID', attributes: 'recruiterID (FK), title, description, requiredSkills, status', note: 'Stores job postings created by recruiters.' },
+                { name: 'MATCH', pk: 'matchID', attributes: 'jobID (FK), profileID (FK), matchScore, status', note: 'Stores the results of the candidate matching process.' }
             ]
         },
         dataflow: {
             title: "Data Flow (DFD Level 1)",
             intro: "This diagram breaks the TechTrust system into its four main functional areas, showing how data moves between them.",
             processes: [
-                { id: '1.0', name: 'User & Profile Management', desc: 'Handles account creation, data input (CRUD), and submission for vetting.', stores: 'USER, PROFILE' },
+                { id: '1.0', name: 'User & Profile Management', desc: 'Handles account creation, profile data input (CRUD), and submission for vetting.', stores: 'USER, PROFILE' },
                 { id: '2.0', name: 'AI Vetting & Trust Scoring', desc: 'Core process. Receives a Profile, runs AI analysis, calculates Trust Score, and generates feedback.', stores: 'PROFILE, VETTING_RESULT' },
                 { id: '3.0', name: 'Job Matching & Search', desc: 'Allows recruiters to post jobs and search for vetted candidates. Calculates a matchScore.', stores: 'PROFILE, JOB_POST, MATCH' },
                 { id: '4.0', name: 'Reporting & Telemetry', desc: 'Generates Recruiter Dashboard reports and logs system performance for auditing.', stores: 'VETTING_RESULT, MATCH' }
@@ -128,17 +121,17 @@
             intro: "This is the day-by-day execution plan for the 4-week sprint. Use the filters to view tasks for the entire team or a specific member. Each task is designed to build upon the previous day's work, leading to a fully integrated product by Day 20.",
             tasks: [
                 { day: 1, m1: 'Setup Project, Build Header/Footer', m2: 'Finalize API & DB Contracts', m3: 'Draft Gemini System Instruction' },
-                { day: 2, m1: 'Build Login/Register UI', m2: 'Setup Firebase Auth & Firestore', m3: 'Test Gemini API connectivity' },
-                { day: 3, m1: 'Build static Profile Page shell', m2: 'Implement Sign-Up/Sign-In functions', m3: 'Define AI input handler function' },
-                { day: 4, m1: 'Build static Recruiter Dashboard shell', m2: 'Implement Logout & session persistence', m3: 'Create 5 sets of AI test data' },
+                { day: 2, m1: 'Build Login/Register UI', m2: 'Setup Node.js Server & MongoDB', m3: 'Test Gemini API connectivity' },
+                { day: 3, m1: 'Build static Profile Page shell', m2: 'Implement JWT-based Sign-Up/Sign-In functions', m3: 'Define AI input handler function' },
+                { day: 4, m1: 'Build static Recruiter Dashboard shell', m2: 'Implement Logout & session persistence (JWT)', m3: 'Create 5 sets of AI test data' },
                 { day: 5, m1: 'Connect UI to Auth functions (Login/Logout)', m2: 'Review M1 Auth connection', m3: 'Document `verifyClaim()` input/output' },
                 { day: 6, m1: 'Fetch and display user profile data', m2: 'Implement API to read profile data', m3: 'Write core `verifyClaim()` function body' },
-                { day: 7, m1: 'Build UI for adding/deleting Claims', m2: 'Implement Claims CRUD API', m3: 'Parse AI response into JSON schema' },
+                { day: 7, m1: 'Build UI for adding/deleting Claims', m2: 'Implement Claims CRUD endpoints (Node.js/MongoDB)', m3: 'Parse AI response into JSON schema' },
                 { day: 8, m1: 'Build UI for creating a Job Posting', m2: 'Implement Job Posting write API', m3: 'Handover testable `verifyClaim` function to M2' },
                 { day: 9, m1: 'Build "Submit for Verification" modal UI', m2: 'Implement API to list all candidates', m3: 'Validate `verifyClaim` with edge cases' },
                 { day: 10, m1: 'Test full Claims flow (add/delete)', m2: 'Review M3 `verifyClaim` function', m3: 'Document AI error handling for M2' },
                 { day: 11, m1: 'Implement "Run Verification" button handler', m2: 'Integrate M3 `verifyClaim` function call', m3: 'Support M2 with integration' },
-                { day: 12, m1: 'Display AI result (score/summary) in UI', m2: 'Save AI JSON result to Firestore', m3: 'Ensure AI output format is correct for DB' },
+                { day: 12, m1: 'Display AI result (score/summary) in UI', m2: 'Save AI JSON result to MongoDB', m3: 'Ensure AI output format is correct for DB' },
                 { day: 13, m1: 'Build UI for Matching Score on dashboard', m2: 'Write core candidate matching algorithm', m3: 'Refine AI prompt for ambiguous claims' },
                 { day: 14, m1: 'Build Recruiter\'s detailed candidate view', m2: 'Implement final matching API endpoint', m3: 'Review M2 data handling for security' },
                 { day: 15, m1: 'Full End-to-End Test of entire user flow', m2: 'Implement API rate limiting & error logging', m3: 'Document Trust Score calculation' },
@@ -382,4 +375,3 @@
 </script>
 </body>
 </html>
-
